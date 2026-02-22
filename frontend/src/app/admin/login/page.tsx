@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center px-6 pt-24">
+        <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center px-6">
             <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-transparent pointer-events-none" />
 
             <motion.div

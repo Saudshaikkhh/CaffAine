@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
-import { ShoppingBag, Plus, Minus, Sparkles, X, Coffee, Flame, Snowflake, IceCream, Check, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, Sparkles, X, Coffee, Flame, Snowflake, IceCream, Check, ArrowRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const categoryColors: Record<string, string> = {
     HOT: 'from-orange-500 to-red-500',
@@ -42,23 +43,36 @@ export default function OrderPage() {
             .catch(console.error);
     }, []);
 
+    const fetchUpsell = (items: any[]) => {
+        if (items.length === 0) return;
+
+        fetch('http://localhost:3001/ai/upsell', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setUpsell(data);
+            })
+            .catch(err => {
+                console.error('Upsell fetch error:', err);
+            });
+    };
+
+    useEffect(() => {
+        if (cart.length > 0 && !upsell) {
+            fetchUpsell(cart);
+        }
+    }, [cart, upsell]);
+
     const addToCart = (product: any) => {
         if (!isAuthenticated) {
             router.push('/login');
             return;
         }
         contextAddToCart(product);
-
-        if (!upsell) {
-            fetch('http://localhost:3001/ai/upsell', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: [...cart, product] })
-            })
-                .then(res => res.json())
-                .then(setUpsell)
-                .catch(console.error);
-        }
+        // fetchUpsell will be triggered by useEffect
     };
 
     const total = cart.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
@@ -199,16 +213,16 @@ export default function OrderPage() {
                     <div className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl shadow-black h-fit sticky top-28 overflow-hidden">
                         {/* Header */}
                         <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-8">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <div className="flex flex-col">
+                                <h2 className="text-3xl font-black text-white flex items-center gap-3">
                                     <ShoppingBag size={24} strokeWidth={3} />
-                                    Your Cart
+                                    Your Cart {itemCount > 0 && (
+                                        <span className="text-sm font-black text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+                                            {itemCount}
+                                        </span>
+                                    )}
                                 </h2>
-                                {itemCount > 0 && (
-                                    <span className="bg-zinc-950/30 backdrop-blur-md text-white text-sm font-black px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-widest">
-                                        {itemCount}
-                                    </span>
-                                )}
+                                <p className="text-zinc-950 text-sm font-bold mt-2">Manage your selection here</p>
                             </div>
                         </div>
 
@@ -222,11 +236,16 @@ export default function OrderPage() {
                                             animate={{ opacity: 1 }}
                                             className="text-center py-20"
                                         >
-                                            <div className="w-20 h-20 bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-600">
-                                                <ShoppingBag size={40} />
+                                            <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-zinc-700">
+                                                <ShoppingBag size={32} />
                                             </div>
-                                            <p className="text-zinc-500 text-lg font-bold">Your cart is empty</p>
-                                            <p className="text-zinc-600 text-sm mt-1">Ready for something special?</p>
+                                            <p className="text-zinc-500 font-bold mb-6">Your cart is empty</p>
+                                            <Link href="/orders">
+                                                <Button variant="outline" className="rounded-2xl border-white/5 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all text-xs font-black uppercase tracking-widest">
+                                                    <Clock size={14} className="mr-2" />
+                                                    View Order History
+                                                </Button>
+                                            </Link>
                                         </motion.div>
                                     ) : (
                                         cart.map((item: any) => (

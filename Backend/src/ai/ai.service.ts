@@ -116,17 +116,21 @@ export class AiService {
 
   async upsell(orderItems: any[]) {
     // Simple logic: if coffee, suggest pastry
-    const hasCoffee = orderItems.some(item => item.name?.toLowerCase().includes('coffee') || item.category === 'HOT' || item.category === 'COLD');
+    const hasCoffee = orderItems.some(item =>
+      item.name?.toLowerCase().includes('coffee') ||
+      item.category === 'HOT' ||
+      item.category === 'COLD'
+    );
 
-    let suggestionName = 'Bottle of Water';
-    let reason = 'Stay hydrated!';
+    let suggestionName = 'Croissant'; // Safe fallback from seed
+    let reason = 'A light, buttery treat to go with your drink.';
 
     if (hasCoffee) {
-      suggestionName = 'Chocolate Cookie';
+      suggestionName = 'Chocolate Chip'; // Matches 'Chocolate Chip Cookie'
       reason = 'Pairs perfectly with your coffee.';
     }
 
-    const product = await this.prisma.product.findFirst({
+    let product = await this.prisma.product.findFirst({
       where: {
         name: {
           contains: suggestionName,
@@ -134,12 +138,18 @@ export class AiService {
       },
     });
 
+    // Final fallback to any coffee if still nothing
+    if (!product) {
+      product = await this.prisma.product.findFirst();
+    }
+
     return {
-      suggestion: suggestionName,
+      suggestion: product?.name || suggestionName,
       product: product,
       reason: reason,
     };
   }
+
 
 
   nlpOrder(text: string) {

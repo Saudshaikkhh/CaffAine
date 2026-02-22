@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Coffee, Sparkles, ShoppingBag, LayoutDashboard, User, LogOut } from 'lucide-react';
+import { Menu, X, Coffee, Sparkles, ShoppingBag, LayoutDashboard, User, LogOut, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
@@ -16,6 +16,7 @@ const Navbar = () => {
     const { cart } = useCart();
     const { user, logout, isAdmin, isAuthenticated } = useAuth();
     const pathname = usePathname();
+    const isHiddenPage = pathname.startsWith('/admin');
 
     const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -27,9 +28,12 @@ const Navbar = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    if (isHiddenPage) return null;
+
     const navLinks = [
         { href: '/menu', label: 'Menu', icon: Coffee },
-        { href: '/order', label: 'Order', icon: ShoppingBag },
+        { href: '/order', label: itemCount > 0 ? `Cart (${itemCount})` : 'Cart', icon: ShoppingBag },
+        { href: '/orders', label: 'History', icon: Clock },
         { href: '/mood', label: 'Mood AI', icon: Sparkles },
     ];
 
@@ -97,16 +101,6 @@ const Navbar = () => {
                         );
                     })}
                     <div className="ml-6 pl-6 border-l border-zinc-800 flex items-center gap-4">
-                        <Link href="/order" className="relative group/cart">
-                            <div className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-zinc-400 group-hover/cart:text-orange-500 transition-colors">
-                                <ShoppingBag size={20} />
-                            </div>
-                            {itemCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 text-[10px] font-black flex items-center justify-center text-white border-2 border-zinc-950">
-                                    {itemCount}
-                                </span>
-                            )}
-                        </Link>
 
                         {isAuthenticated ? (
                             <div className="flex items-center gap-4">
@@ -126,13 +120,6 @@ const Navbar = () => {
                                         <LogOut size={16} />
                                     </button>
                                 </div>
-                                <Link
-                                    href="/orders"
-                                    className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-zinc-400 hover:text-orange-500 transition-colors"
-                                    title="My Orders"
-                                >
-                                    <ShoppingBag size={20} />
-                                </Link>
                             </div>
 
                         ) : (
@@ -143,11 +130,7 @@ const Navbar = () => {
                             </Link>
                         )}
 
-                        <Link href="/order">
-                            <Button className="rounded-2xl px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-none shadow-lg shadow-orange-500/30 font-bold transition-all hover:scale-105 active:scale-95">
-                                {itemCount > 0 ? 'Checkout' : 'Order Now'}
-                            </Button>
-                        </Link>
+
                     </div>
                 </div>
 

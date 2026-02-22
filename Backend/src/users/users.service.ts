@@ -20,9 +20,23 @@ export class UsersService {
     return this.prisma.user.findMany();
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
+      include: {
+        orders: {
+          include: {
+            items: {
+              include: {
+                product: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     });
   }
 

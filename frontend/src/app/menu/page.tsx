@@ -192,9 +192,10 @@ export default function MenuPage() {
                                             </div>
                                             <Button
                                                 onClick={() => handleAddToCart(product)}
-                                                className="h-12 w-12 rounded-2xl bg-zinc-800 text-white hover:bg-orange-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center p-0"
+                                                className="h-12 px-6 rounded-2xl bg-zinc-800 text-white hover:bg-orange-500 hover:text-white transition-all font-bold text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                                             >
-                                                <ShoppingBag size={20} />
+                                                <ShoppingBag size={16} />
+                                                Add to Cart
                                             </Button>
                                         </div>
                                     </div>
