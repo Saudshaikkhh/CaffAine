@@ -184,20 +184,19 @@ export default function MenuPage() {
                                             {product.description}
                                         </p>
 
-                                        <div className="flex items-center justify-between mt-auto">
+                                        <div className="flex items-center justify-between mt-auto gap-4 flex-wrap">
                                             <div className="flex flex-col">
-                                                <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Price</span>
-                                                <span className="text-2xl font-black text-white">
+                                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Price</span>
+                                                <span className="text-2xl font-black text-white whitespace-nowrap">
                                                     ₹{product.price.toFixed(2)}
                                                 </span>
-
                                             </div>
                                             <Button
                                                 onClick={() => handleAddToCart(product)}
-                                                className="h-12 px-6 rounded-2xl bg-zinc-800 text-white hover:bg-orange-500 hover:text-white transition-all font-bold text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                                                className="h-11 px-4 rounded-xl bg-zinc-800 text-white hover:bg-orange-500 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 group/btn"
                                             >
-                                                <ShoppingBag size={16} />
-                                                Add to Cart
+                                                <ShoppingBag size={14} className="group-hover/btn:scale-110 transition-transform" />
+                                                <span>Add to Cart</span>
                                             </Button>
                                         </div>
                                     </div>

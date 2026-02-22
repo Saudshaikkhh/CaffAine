@@ -11,7 +11,6 @@ import {
     LogOut,
     ChevronRight,
     Search,
-    Bell,
     User,
     ClipboardList
 } from 'lucide-react';
@@ -57,12 +56,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex h-screen bg-zinc-950 text-white overflow-hidden">
             {/* Sidebar */}
             <aside className="w-72 bg-zinc-900 border-r border-white/5 flex flex-col">
-                <div className="p-8">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
-                            <MenuIcon className="text-white" size={20} />
-                        </div>
-                        <span className="font-black text-xl tracking-tight">CaffAIne <span className="text-orange-500 uppercase text-[10px] block tracking-[0.3em]">Admin</span></span>
+                <div className="p-8 flex justify-center">
+                    <Link href="/" className="group">
+                        <img
+                            src="/rlogo.png"
+                            alt="CaffAIne Logo"
+                            className="w-44 h-auto object-contain group-hover:scale-105 transition-transform duration-500"
+                        />
                     </Link>
                 </div>
 
@@ -115,11 +115,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="flex items-center gap-6 flex-1" />
 
                     <div className="flex items-center gap-6">
-                        <button className="p-2.5 bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-colors relative">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full border-2 border-zinc-900" />
-                        </button>
-                        <div className="h-10 w-[1px] bg-white/5 mx-2" />
                         <div className="flex items-center gap-4">
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-black text-white">{user?.name || 'Administrator'}</p>
