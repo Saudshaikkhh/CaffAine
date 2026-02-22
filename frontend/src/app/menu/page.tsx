@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const categories = [
     { id: 'ALL', label: 'All Items', icon: Coffee },
@@ -32,6 +34,16 @@ export default function MenuPage() {
     const [activeCategory, setActiveCategory] = useState('ALL');
     const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    const handleAddToCart = (product: any) => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
+        addToCart(product);
+    };
 
     useEffect(() => {
         fetch('http://localhost:3001/products')
@@ -174,11 +186,12 @@ export default function MenuPage() {
                                             <div className="flex flex-col">
                                                 <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Price</span>
                                                 <span className="text-2xl font-black text-white">
-                                                    ${product.price.toFixed(2)}
+                                                    ₹{product.price.toFixed(2)}
                                                 </span>
+
                                             </div>
                                             <Button
-                                                onClick={() => addToCart(product)}
+                                                onClick={() => handleAddToCart(product)}
                                                 className="h-12 w-12 rounded-2xl bg-zinc-800 text-white hover:bg-orange-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center p-0"
                                             >
                                                 <ShoppingBag size={20} />

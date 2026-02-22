@@ -4,15 +4,17 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Coffee, Sparkles, ShoppingBag, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Coffee, Sparkles, ShoppingBag, LayoutDashboard, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const { cart } = useCart();
+    const { user, logout, isAdmin, isAuthenticated } = useAuth();
     const pathname = usePathname();
 
     const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -29,8 +31,12 @@ const Navbar = () => {
         { href: '/menu', label: 'Menu', icon: Coffee },
         { href: '/order', label: 'Order', icon: ShoppingBag },
         { href: '/mood', label: 'Mood AI', icon: Sparkles },
-        { href: '/admin', label: 'Admin', icon: LayoutDashboard },
     ];
+
+    // Only add Admin link if user is an admin
+    if (isAdmin) {
+        navLinks.push({ href: '/admin', label: 'Admin', icon: LayoutDashboard });
+    }
 
     return (
         <nav
@@ -57,7 +63,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden lg:flex items-center gap-1">
                     {navLinks.map((link) => {
                         const isActive = pathname === link.href;
                         const Icon = link.icon;
@@ -101,6 +107,42 @@ const Navbar = () => {
                                 </span>
                             )}
                         </Link>
+
+                        {isAuthenticated ? (
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border border-white/5 rounded-2xl group/user">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-lg">
+                                        <User size={16} />
+                                    </div>
+                                    <div className="text-left hidden xl:block">
+                                        <p className="text-xs font-black text-white leading-none mb-1">{user?.name}</p>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest leading-none">{user?.role}</p>
+                                    </div>
+                                    <button
+                                        onClick={logout}
+                                        className="ml-2 p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+                                        title="Logout"
+                                    >
+                                        <LogOut size={16} />
+                                    </button>
+                                </div>
+                                <Link
+                                    href="/orders"
+                                    className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-zinc-400 hover:text-orange-500 transition-colors"
+                                    title="My Orders"
+                                >
+                                    <ShoppingBag size={20} />
+                                </Link>
+                            </div>
+
+                        ) : (
+                            <Link href="/login">
+                                <Button className="rounded-2xl px-6 bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 font-bold transition-all">
+                                    Login
+                                </Button>
+                            </Link>
+                        )}
+
                         <Link href="/order">
                             <Button className="rounded-2xl px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-none shadow-lg shadow-orange-500/30 font-bold transition-all hover:scale-105 active:scale-95">
                                 {itemCount > 0 ? 'Checkout' : 'Order Now'}
@@ -110,12 +152,22 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile Menu Toggle */}
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
-                >
-                    {isOpen ? <X size={28} /> : <Menu size={28} />}
-                </button>
+                <div className="flex items-center gap-4 lg:hidden">
+                    <Link href="/order" className="relative group/cart">
+                        <ShoppingBag size={24} className="text-zinc-400" />
+                        {itemCount > 0 && (
+                            <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-orange-500 text-[10px] font-black flex items-center justify-center text-white border-2 border-zinc-950">
+                                {itemCount}
+                            </span>
+                        )}
+                    </Link>
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="p-2 text-zinc-400 hover:text-white transition-colors"
+                    >
+                        {isOpen ? <X size={28} /> : <Menu size={28} />}
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Navigation Menu */}
@@ -125,9 +177,27 @@ const Navbar = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-zinc-900/95 backdrop-blur-2xl border-b border-white/5 overflow-hidden"
+                        className="lg:hidden bg-zinc-900/95 backdrop-blur-2xl border-b border-white/5 overflow-hidden"
                     >
                         <div className="container mx-auto px-6 py-8 flex flex-col gap-4">
+                            {isAuthenticated && (
+                                <div className="flex items-center gap-4 p-4 mb-2 bg-white/5 rounded-3xl border border-white/5">
+                                    <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white">
+                                        <User size={24} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-lg font-black text-white">{user?.name}</p>
+                                        <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">{user?.role}</p>
+                                    </div>
+                                    <button
+                                        onClick={logout}
+                                        className="p-3 bg-red-500/10 text-red-500 rounded-xl"
+                                    >
+                                        <LogOut size={20} />
+                                    </button>
+                                </div>
+                            )}
+
                             {navLinks.map((link) => {
                                 const isActive = pathname === link.href;
                                 const Icon = link.icon;
@@ -153,10 +223,19 @@ const Navbar = () => {
                                     </Link>
                                 );
                             })}
+
+                            {!isAuthenticated && (
+                                <Link href="/login" onClick={() => setIsOpen(false)}>
+                                    <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-zinc-800 text-white border border-white/10">
+                                        Login
+                                    </Button>
+                                </Link>
+                            )}
+
                             <div className="pt-4 border-t border-zinc-800">
                                 <Link href="/order" onClick={() => setIsOpen(false)}>
-                                    <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-gradient-to-r from-orange-500 to-amber-500 border-none">
-                                        Get Started
+                                    <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-gradient-to-r from-orange-500 to-amber-500 border-none shadow-xl shadow-orange-500/20">
+                                        {itemCount > 0 ? 'Checkout' : 'Order Now'}
                                     </Button>
                                 </Link>
                             </div>

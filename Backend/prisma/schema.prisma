@@ -33,9 +33,11 @@ model Product {
 
 model Order {
   id        Int      @id @default(autoincrement())
-  userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
-  status    String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  tableNumber String?
+  status      String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+
   total     Float
   createdAt DateTime @default(now())
   items     OrderItem[]

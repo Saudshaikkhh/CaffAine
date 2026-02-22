@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { ShoppingBag, Plus, Minus, Sparkles, X, Coffee, Flame, Snowflake, IceCream, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const categoryColors: Record<string, string> = {
     HOT: 'from-orange-500 to-red-500',
@@ -22,9 +24,16 @@ const categoryIcons: Record<string, any> = {
 export default function OrderPage() {
     const [products, setProducts] = useState<any[]>([]);
     const { cart, addToCart: contextAddToCart, removeFromCart, updateQuantity, clearCart } = useCart();
+    const { isAuthenticated, user } = useAuth();
+    const router = useRouter();
     const [upsell, setUpsell] = useState<any>(null);
     const [isCheckout, setIsCheckout] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
+    const [showTablePrompt, setShowTablePrompt] = useState(false);
+    const [tableNumber, setTableNumber] = useState('');
+    const [checkoutError, setCheckoutError] = useState('');
+
+
 
     useEffect(() => {
         fetch('http://localhost:3001/products')
@@ -34,6 +43,10 @@ export default function OrderPage() {
     }, []);
 
     const addToCart = (product: any) => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
         contextAddToCart(product);
 
         if (!upsell) {
@@ -52,29 +65,53 @@ export default function OrderPage() {
     const itemCount = cart.reduce((acc: number, item: any) => acc + item.quantity, 0);
 
     const handleCheckout = async () => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
+
+
+        if (!tableNumber && !showTablePrompt) {
+            setShowTablePrompt(true);
+            return;
+        }
+
         setIsCheckout(true);
         try {
             const res = await fetch('http://localhost:3001/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId: 1,
+                    userId: user?.id || 1,
+                    tableNumber: tableNumber,
                     items: cart.map(item => ({ productId: item.id, quantity: item.quantity }))
                 })
             });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to place order');
+            }
+
+
             if (res.ok) {
                 setOrderSuccess(true);
+                setShowTablePrompt(false);
                 setTimeout(() => {
                     clearCart();
                     setUpsell(null);
                     setOrderSuccess(false);
-                }, 3000);
+                    setTableNumber('');
+                }, 8000); // Kept visible longer for the message
             }
-        } catch (error) {
+
+        } catch (error: any) {
             console.error(error);
+            setCheckoutError(error.message || 'Something went wrong. Please try again.');
         } finally {
             setIsCheckout(false);
         }
+
     };
 
     return (
@@ -124,7 +161,7 @@ export default function OrderPage() {
                                                     {product.name}
                                                 </h3>
                                                 <span className="font-black text-xl text-white ml-2">
-                                                    ${product.price.toFixed(2)}
+                                                    ₹{product.price.toFixed(2)}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-zinc-500 line-clamp-2 mb-4 leading-relaxed group-hover:text-zinc-400 transition-colors">
@@ -209,23 +246,33 @@ export default function OrderPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-bold text-white truncate">{item.name}</p>
-                                                    <p className="text-xs text-zinc-500 font-bold">${item.price.toFixed(2)}</p>
+                                                    <p className="text-xs text-zinc-500 font-bold">₹{item.price.toFixed(2)}</p>
                                                 </div>
-                                                <div className="flex items-center gap-2 bg-zinc-950/50 p-1.5 rounded-xl border border-white/5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-1 bg-zinc-950/50 p-1 rounded-xl border border-white/5">
+                                                        <button
+                                                            onClick={() => updateQuantity(item.id, -1)}
+                                                            className="w-7 h-7 flex items-center justify-center hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                                                        >
+                                                            <Minus size={12} />
+                                                        </button>
+                                                        <span className="text-sm font-black w-5 text-center text-white">{item.quantity}</span>
+                                                        <button
+                                                            onClick={() => updateQuantity(item.id, 1)}
+                                                            className="w-7 h-7 flex items-center justify-center hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                                                        >
+                                                            <Plus size={12} />
+                                                        </button>
+                                                    </div>
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, -1)}
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                                                        onClick={() => removeFromCart(item.id)}
+                                                        className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                                                        title="Remove from cart"
                                                     >
-                                                        <Minus size={14} />
-                                                    </button>
-                                                    <span className="text-sm font-black w-6 text-center text-white">{item.quantity}</span>
-                                                    <button
-                                                        onClick={() => updateQuantity(item.id, 1)}
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                                                    >
-                                                        <Plus size={14} />
+                                                        <X size={18} />
                                                     </button>
                                                 </div>
+
                                             </motion.div>
                                         ))
                                     )}
@@ -234,50 +281,59 @@ export default function OrderPage() {
 
                             {/* Upsell Indicator */}
                             <AnimatePresence>
-                                {upsell && cart.length > 0 && (
+                                {upsell && upsell.product && cart.length > 0 && !cart.find(item => item.id === upsell.product.id) && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="mb-8 p-6 bg-orange-500/10 rounded-2xl border border-orange-500/20 relative overflow-hidden group"
+                                        onClick={() => addToCart(upsell.product)}
+                                        className="mb-8 p-6 bg-orange-500/10 rounded-2xl border border-orange-500/20 relative overflow-hidden group cursor-pointer hover:bg-orange-500/20 transition-all active:scale-[0.98]"
                                     >
-                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-all duration-700">
+                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 group-hover:scale-125 transition-all duration-700">
                                             <Sparkles size={48} className="text-orange-500" />
                                         </div>
                                         <div className="flex items-start gap-4">
-                                            <div className="p-3 rounded-xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
+                                            <div className="p-3 rounded-xl bg-orange-500 text-white shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
                                                 <Sparkles size={20} />
                                             </div>
                                             <div className="relative z-10">
-                                                <p className="text-xs font-black text-orange-500 uppercase tracking-widest mb-1">AI Recommendation</p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="text-xs font-black text-orange-500 uppercase tracking-widest">AI Recommendation</p>
+                                                    <span className="bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse">ADD +</span>
+                                                </div>
                                                 <p className="text-sm text-zinc-300 font-medium leading-relaxed italic mb-3">
                                                     "{upsell.reason}"
                                                 </p>
-                                                <p className="text-lg font-black text-white">{upsell.suggestion}</p>
+                                                <p className="text-lg font-black text-white group-hover:text-orange-400 transition-colors">{upsell.suggestion}</p>
                                             </div>
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
+
                             {/* Order Summary */}
                             <div className="border-t border-white/5 pt-8">
                                 <div className="flex items-center justify-between mb-8">
                                     <span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Total Amount</span>
                                     <span className="text-4xl font-black text-white">
-                                        ${total.toFixed(2)}
+                                        ₹{total.toFixed(2)}
                                     </span>
                                 </div>
                                 <Button
                                     className={cn(
-                                        "w-full h-16 text-lg rounded-2xl font-black transition-all duration-500 shadow-2xl",
+                                        "w-full h-16 text-lg rounded-2xl font-black transition-all duration-500 shadow-2xl active:scale-[0.98]",
                                         orderSuccess
                                             ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20'
                                             : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-orange-500/30'
                                     )}
-                                    disabled={cart.length === 0 || isCheckout}
-                                    onClick={handleCheckout}
+                                    disabled={cart.length === 0 || isCheckout || orderSuccess}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCheckout();
+                                    }}
                                 >
+
                                     {orderSuccess ? (
                                         <motion.span
                                             initial={{ scale: 0.8 }}
@@ -304,8 +360,134 @@ export default function OrderPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Table Number Prompt Modal */}
+            <AnimatePresence>
+                {showTablePrompt && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowTablePrompt(false)}
+                            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-[2.5rem] p-10 shadow-3xl overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-amber-500" />
+
+                            <div className="text-center mb-8">
+                                <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <ShoppingBag size={32} className="text-orange-500" />
+                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">Identify Your Table</h3>
+                                <p className="text-zinc-500 font-medium">Where should we deliver your brew?</p>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Table Number</label>
+                                    <input
+                                        type="text"
+                                        value={tableNumber}
+                                        onChange={(e) => setTableNumber(e.target.value)}
+                                        autoFocus
+                                        className="w-full h-16 bg-zinc-950 border border-white/5 rounded-2xl px-6 text-xl font-black text-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all placeholder:text-zinc-800"
+                                        placeholder="e.g. 05"
+                                    />
+                                </div>
+
+                                {checkoutError && (
+                                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-xs font-bold">
+                                        {checkoutError}
+                                    </div>
+                                )}
+
+
+                                <Button
+                                    onClick={handleCheckout}
+                                    disabled={!tableNumber || isCheckout}
+                                    className="w-full h-16 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-lg shadow-xl shadow-orange-500/20 flex items-center justify-center gap-3 transition-all group"
+                                >
+                                    {isCheckout ? (
+                                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            Place Order
+                                            <Check size={20} strokeWidth={3} className="group-hover:scale-110 transition-transform" />
+                                        </>
+                                    )}
+                                </Button>
+
+                                <button
+                                    onClick={() => setShowTablePrompt(false)}
+                                    className="w-full text-center text-zinc-600 hover:text-zinc-400 text-sm font-bold transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Enhanced Success Overlay */}
+            <AnimatePresence>
+                {orderSuccess && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-zinc-950/90 backdrop-blur-2xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="relative w-full max-w-lg bg-zinc-900 border border-white/5 rounded-[3rem] p-12 text-center shadow-3xl"
+                        >
+                            <div className="w-24 h-24 bg-green-500 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-green-500/20">
+                                <Check size={48} strokeWidth={4} className="text-white" />
+                            </div>
+
+                            <h2 className="text-4xl font-black text-white mb-6">Order Placed!</h2>
+
+                            <div className="space-y-6 mb-10">
+                                <p className="text-xl text-zinc-300 font-medium leading-relaxed">
+                                    Your order has been placed successfully. Please wait while we prepare your items.
+                                </p>
+                                <div className="p-6 bg-orange-500/5 border border-orange-500/10 rounded-2xl italic">
+                                    <p className="text-orange-500 font-bold">
+                                        Tip: If you would like to order anything else, you can chat with our new AI assistant.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={() => {
+                                    clearCart();
+                                    setUpsell(null);
+                                    setOrderSuccess(false);
+                                    setTableNumber('');
+                                    router.push('/mood');
+                                }}
+                                className="w-full h-16 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-black text-lg transition-all flex items-center justify-center gap-3"
+                            >
+                                Chat with AI Assistant
+                                <Sparkles size={20} className="text-orange-500" />
+                            </Button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+
 
 

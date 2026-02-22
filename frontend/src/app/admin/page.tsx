@@ -3,13 +3,18 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
-import { Package, TrendingUp, DollarSign, Users, Download } from 'lucide-react';
+import { Package, TrendingUp, IndianRupee, Users, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
     const [products, setProducts] = useState([]);
+    const { user, isAdmin, loading } = useAuth();
+    const router = useRouter();
 
-    // Mock sales data for now
+    // Mock sales data
     const data = [
         { name: 'Mon', sales: 4000 },
         { name: 'Tue', sales: 3000 },
@@ -21,11 +26,29 @@ export default function AdminPage() {
     ];
 
     useEffect(() => {
-        fetch('http://localhost:3001/products')
-            .then(res => res.json())
-            .then(data => setProducts(data))
-            .catch(console.error);
-    }, []);
+        if (!loading && !isAdmin) {
+            router.push('/admin/login');
+        }
+    }, [isAdmin, loading, router]);
+
+    useEffect(() => {
+        if (isAdmin) {
+            fetch('http://localhost:3001/products')
+                .then(res => res.json())
+                .then(data => setProducts(data))
+                .catch(console.error);
+        }
+    }, [isAdmin]);
+
+    if (loading || !isAdmin) {
+        return (
+            <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-4" />
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs animate-pulse">Verifying Credentials...</p>
+            </div>
+        );
+    }
+
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white pt-24 pb-12 px-8">
@@ -49,8 +72,8 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
                         title="Total Revenue"
-                        value="$45,231.89"
-                        icon={<DollarSign className="text-orange-500" />}
+                        value="₹45,231.89"
+                        icon={<IndianRupee className="text-orange-500" />}
                         trend="+20.1% from last month"
                         color="from-orange-500/10 to-transparent"
                     />
@@ -98,7 +121,7 @@ export default function AdminPage() {
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
-                                        tickFormatter={(value) => `$${value}`}
+                                        tickFormatter={(value) => `₹${value}`}
                                     />
                                     <Tooltip
                                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}

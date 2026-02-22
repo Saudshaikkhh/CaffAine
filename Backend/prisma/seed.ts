@@ -10,8 +10,29 @@ const prisma = new PrismaClient({ adapter } as any);
 async function main() {
     console.log('Seeding database...');
 
-    // Clear existing products
+    // Clear existing data
+    await prisma.orderItem.deleteMany();
+    await prisma.order.deleteMany();
     await prisma.product.deleteMany();
+    await prisma.user.deleteMany();
+
+    // Seed users
+    await prisma.user.createMany({
+        data: [
+            {
+                email: 'admin@caffaine.com',
+                password: 'adminpassword',
+                name: 'Admin User',
+                role: 'ADMIN',
+            },
+            {
+                email: 'customer@gmail.com',
+                password: 'customerpassword',
+                name: 'Regular Customer',
+                role: 'CUSTOMER',
+            },
+        ],
+    });
 
     // Seed products
     const products = await prisma.product.createMany({

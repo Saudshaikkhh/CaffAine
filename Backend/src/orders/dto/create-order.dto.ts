@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsInt, IsNotEmpty, IsNumber, IsOptional, ValidateNested } from 'class-validator';
+import { IsArray, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+
 
 export class CreateOrderItemDto {
     @IsInt()
@@ -15,6 +16,11 @@ export class CreateOrderDto {
     @IsInt()
     @IsOptional()
     userId?: number;
+
+    @IsString()
+    @IsOptional()
+    tableNumber?: string;
+
 
     @IsArray()
     @ValidateNested({ each: true })

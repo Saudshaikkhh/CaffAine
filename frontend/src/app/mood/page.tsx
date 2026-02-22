@@ -17,6 +17,8 @@ import {
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Message {
     id: string;
@@ -50,6 +52,16 @@ export default function ChatBaristaPage() {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const { addToCart } = useCart();
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    const handleAddToCart = (product: any) => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
+        addToCart(product);
+    };
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -196,10 +208,10 @@ export default function ChatBaristaPage() {
                                                     <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-4">{msg.product.category}</p>
 
                                                     <div className="flex items-center justify-center sm:justify-between gap-4">
-                                                        <span className="text-xl font-black text-white">${msg.product.price}</span>
+                                                        <span className="text-xl font-black text-white">₹{msg.product.price}</span>
                                                         <Button
                                                             size="sm"
-                                                            onClick={() => addToCart(msg.product)}
+                                                            onClick={() => handleAddToCart(msg.product)}
                                                             className="h-10 px-6 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs transition-all active:scale-95 shadow-lg shadow-orange-500/20"
                                                         >
                                                             Add to Cart

@@ -114,23 +114,33 @@ export class AiService {
     return this.analyzeMood(mood);
   }
 
-  upsell(orderItems: any[]) {
+  async upsell(orderItems: any[]) {
     // Simple logic: if coffee, suggest pastry
     const hasCoffee = orderItems.some(item => item.name?.toLowerCase().includes('coffee') || item.category === 'HOT' || item.category === 'COLD');
 
+    let suggestionName = 'Bottle of Water';
+    let reason = 'Stay hydrated!';
+
     if (hasCoffee) {
-      return {
-        suggestion: 'Chocolate Cookie',
-        reason: 'Pairs perfectly with your coffee.',
-      };
+      suggestionName = 'Chocolate Cookie';
+      reason = 'Pairs perfectly with your coffee.';
     }
 
-    return {
-      suggestion: 'Bottle of Water',
-      reason: 'Stay hydrated!',
-    };
+    const product = await this.prisma.product.findFirst({
+      where: {
+        name: {
+          contains: suggestionName,
+        },
+      },
+    });
 
+    return {
+      suggestion: suggestionName,
+      product: product,
+      reason: reason,
+    };
   }
+
 
   nlpOrder(text: string) {
     // Mock NLP parsing

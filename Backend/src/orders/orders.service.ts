@@ -9,9 +9,10 @@ export class OrdersService {
   constructor(private prisma: PrismaService) { }
 
   async create(createOrderDto: CreateOrderDto) {
-    const { userId, items } = createOrderDto;
+    const { userId, items, tableNumber } = createOrderDto;
 
     return this.prisma.$transaction(async (prisma) => {
+
       let total = 0;
       const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
 
@@ -50,8 +51,10 @@ export class OrdersService {
       return prisma.order.create({
         data: {
           userId,
+          tableNumber,
           total,
           status: 'PENDING',
+
           items: {
             create: orderItemsData,
           },
@@ -80,7 +83,24 @@ export class OrdersService {
     });
   }
 
+  async findByUser(userId: number) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
   findOne(id: number) {
+
     return this.prisma.order.findUnique({
       where: { id },
       include: {
