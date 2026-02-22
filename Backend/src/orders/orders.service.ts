@@ -80,6 +80,9 @@ export class OrdersService {
         },
         user: true,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 

@@ -37,6 +37,7 @@ model Order {
   user        User?    @relation(fields: [userId], references: [id])
   tableNumber String?
   status      String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  notes       String?
 
   total     Float
   createdAt DateTime @default(now())

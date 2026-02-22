@@ -12,7 +12,8 @@ import {
     ChevronRight,
     Search,
     Bell,
-    User
+    User,
+    ClipboardList
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const menuItems = [
         { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/orders', label: 'Recent Orders', icon: ClipboardList },
         { href: '/admin/users', label: 'User Management', icon: Users },
         { href: '/admin/products', label: 'Menu Management', icon: MenuIcon },
     ];
@@ -109,17 +111,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-20 bg-zinc-900/50 backdrop-blur-md border-b border-white/5 px-10 flex items-center justify-between relative z-20">
-                    <div className="flex items-center gap-6 flex-1 max-w-xl">
-                        <div className="relative w-full group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-orange-500 transition-colors" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Universal search..."
-                                className="w-full bg-black/40 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-1 focus:ring-orange-500/50 outline-none transition-all placeholder:text-zinc-700"
-                            />
-                        </div>
-                    </div>
+                <header className="h-20 bg-zinc-900 border-b border-white/5 px-10 flex items-center justify-between relative z-20">
+                    <div className="flex items-center gap-6 flex-1" />
 
                     <div className="flex items-center gap-6">
                         <button className="p-2.5 bg-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-colors relative">

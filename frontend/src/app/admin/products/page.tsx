@@ -393,16 +393,26 @@ export default function AdminProductsPage() {
                                                 </select>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <div className="pt-4">
-                                            <button
-                                                type="submit"
-                                                className="w-full h-16 bg-orange-500 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-[2rem] shadow-2xl shadow-orange-500/20 transition-all active:scale-95"
-                                            >
-                                                {selectedProduct ? 'Update Collection' : 'Confirm & Add to Menu'}
-                                            </button>
+                                {/* Modal Footer */}
+                                <div className="p-8 bg-zinc-900/50 border-t border-white/10 flex items-center justify-between gap-6 shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500">
+                                            <AlertCircle size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 leading-tight">Verification</p>
+                                            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Stock & Price Checked</p>
                                         </div>
                                     </div>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 h-14 bg-orange-500 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-orange-500/20 transition-all active:scale-95 px-8"
+                                    >
+                                        {selectedProduct ? 'Update Collection' : 'Confirm & Add to Menu'}
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>
