@@ -10,6 +10,8 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
+import { API_URL, getImageUrl } from '@/lib/api';
+
 const categories = [
     { id: 'ALL', label: 'All Items', icon: Coffee },
     { id: 'HOT', label: 'Hot Drinks', icon: Flame },
@@ -46,7 +48,7 @@ export default function MenuPage() {
     };
 
     useEffect(() => {
-        fetch('http://localhost:3001/products')
+        fetch(`${API_URL}/products`)
             .then(res => res.json())
             .then(data => {
                 setProducts(data);
@@ -147,7 +149,7 @@ export default function MenuPage() {
 
                                         {product.image ? (
                                             <img
-                                                src={product.image}
+                                                src={getImageUrl(product.image)}
                                                 alt={product.name}
                                                 className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />

@@ -22,6 +22,14 @@ export class CreateOrderDto {
     tableNumber?: string;
 
 
+    @IsString()
+    @IsOptional()
+    status?: string;
+
+    @IsString()
+    @IsOptional()
+    notes?: string;
+
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CreateOrderItemDto)

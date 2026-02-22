@@ -14,10 +14,14 @@ import {
     Layers,
     Coffee,
     Search,
-    AlertCircle
+    AlertCircle,
+    CheckCircle2,
+    Loader2,
+    ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { API_URL, getImageUrl } from '@/lib/api';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<any[]>([]);
@@ -43,7 +47,7 @@ export default function AdminProductsPage() {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('http://localhost:3001/products');
+            const res = await fetch(`${API_URL}/products`);
             const data = await res.json();
             setProducts(data);
         } catch (err) {
@@ -62,7 +66,7 @@ export default function AdminProductsPage() {
         formData.append('file', file);
 
         try {
-            const res = await fetch('http://localhost:3001/upload/image', {
+            const res = await fetch(`${API_URL}/upload/image`, {
                 method: 'POST',
                 body: formData
             });
@@ -105,8 +109,8 @@ export default function AdminProductsPage() {
         e.preventDefault();
         const method = selectedProduct ? 'PATCH' : 'POST';
         const url = selectedProduct
-            ? `http://localhost:3001/products/${selectedProduct.id}`
-            : 'http://localhost:3001/products';
+            ? `${API_URL}/products/${selectedProduct.id}`
+            : `${API_URL}/products`;
 
         const payload = {
             ...formData,
@@ -134,7 +138,7 @@ export default function AdminProductsPage() {
         if (!confirm('Are you sure you want to remove this item from the collection?')) return;
 
         try {
-            const res = await fetch(`http://localhost:3001/products/${id}`, {
+            const res = await fetch(`${API_URL}/products/${id}`, {
                 method: 'DELETE'
             });
 
@@ -210,8 +214,12 @@ export default function AdminProductsPage() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-800 flex items-center justify-center text-orange-500 shadow-inner group-hover:scale-110 transition-transform">
-                                    <Coffee size={32} />
+                                <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-800 flex items-center justify-center text-orange-500 shadow-inner group-hover:scale-110 transition-transform overflow-hidden border border-white/5">
+                                    {product.image ? (
+                                        <img src={getImageUrl(product.image)} alt={product.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Coffee size={32} />
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">{product.category}</p>
@@ -249,174 +257,204 @@ export default function AdminProductsPage() {
             {/* Product Modal */}
             <AnimatePresence>
                 {isMenuModalOpen && (
-                    <>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+                        {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMenuModalOpen(false)}
-                            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[70] p-6"
+                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
                         />
+
+                        {/* Modal Content */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl bg-zinc-950 border border-white/10 z-[80] shadow-3xl rounded-[3rem] overflow-hidden flex flex-col"
+                            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                            className="relative w-full max-w-4xl bg-zinc-950 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden flex flex-col"
                         >
                             <form onSubmit={handleSubmit} className="flex flex-col">
-                                <div className="p-8 border-b border-white/10 flex items-center justify-between bg-zinc-900/50">
+                                {/* Modal Header (Condensed) */}
+                                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-zinc-900/50 shrink-0">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white">
+                                        <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                                             {selectedProduct ? <Edit2 size={18} /> : <Plus size={18} />}
                                         </div>
-                                        <h2 className="text-xl font-black">
-                                            {selectedProduct ? 'Edit Item' : 'New Creation'}
-                                        </h2>
+                                        <div>
+                                            <h2 className="text-xl font-black tracking-tight">
+                                                {selectedProduct ? 'Edit Item' : 'New Creation'}
+                                            </h2>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Menu Management</p>
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setIsMenuModalOpen(false)}
-                                        className="p-2 hover:bg-zinc-800 rounded-xl text-zinc-500 hover:text-white transition-all"
+                                        className="w-10 h-10 flex items-center justify-center bg-zinc-900 hover:bg-zinc-800 border border-white/5 rounded-xl text-zinc-500 hover:text-white transition-all group"
                                     >
-                                        <X size={20} />
+                                        <X size={18} className="group-hover:rotate-90 transition-transform duration-500" />
                                     </button>
                                 </div>
 
-                                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Left: Image Upload Section */}
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 block ml-4">Product Image</label>
-                                        <div className="aspect-square w-full rounded-[2rem] bg-zinc-900 border border-white/5 overflow-hidden flex flex-col items-center justify-center relative group p-6">
-                                            {formData.image ? (
-                                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-3xl" />
-                                            ) : (
-                                                <div className="flex flex-col items-center gap-3">
-                                                    <div className="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center text-zinc-500">
-                                                        <ImageIcon size={32} />
+                                {/* Modal Body (Condensed) */}
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {/* Left: Image Upload Section */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between px-2">
+                                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 block">Product Image</label>
+                                                {formData.image && <CheckCircle2 size={12} className="text-orange-500" />}
+                                            </div>
+                                            <div className="aspect-[4/3] w-full rounded-3xl bg-zinc-900/50 border border-white/5 overflow-hidden flex flex-col items-center justify-center relative group p-4">
+                                                {formData.image ? (
+                                                    <motion.img
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        src={getImageUrl(formData.image)}
+                                                        alt="Preview"
+                                                        className="w-full h-full object-cover rounded-2xl shadow-xl"
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-3 text-zinc-700">
+                                                        <div className="w-16 h-16 rounded-2xl bg-zinc-800/50 flex items-center justify-center transition-colors group-hover:bg-zinc-800 group-hover:text-zinc-500">
+                                                            <ImageIcon size={32} />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest mb-1">Mirror Mirror</p>
+                                                            <p className="text-[8px] font-medium opacity-50">Choose a vibrant photo</p>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-center text-[10px] text-zinc-600 font-bold uppercase tracking-wider">Select Photo</p>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {uploading && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-[2rem]">
-                                                    <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
-                                                </div>
-                                            )}
+                                                {uploading && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center rounded-3xl z-40">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                                                            <p className="text-[7px] font-black uppercase tracking-widest text-orange-500">Uploading...</p>
+                                                        </div>
+                                                    </div>
+                                                )}
 
-                                            <div className="absolute inset-x-4 bottom-4 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 backdrop-blur-md rounded-2xl">
-                                                <div className="relative w-full">
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center z-20 backdrop-blur-sm p-4 text-center">
+                                                    <div className="relative w-full max-w-[150px]">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleFileUpload}
+                                                            className="absolute inset-0 opacity-0 cursor-pointer z-30"
+                                                        />
+                                                        <div className="w-full bg-white text-zinc-950 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-all shadow-xl">
+                                                            {formData.image ? 'Change Photo' : 'Select Photo'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-orange-500/5 py-3 rounded-xl border border-orange-500/10 flex items-center justify-center gap-2">
+                                                <AlertCircle size={12} className="text-orange-500/50" />
+                                                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest leading-none">Hi-res JPG/PNG preferred (1:1)</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Form Data Section */}
+                                        <div className="space-y-5">
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 block ml-4">Item Identity</label>
+                                                <div className="relative group">
+                                                    <Tag className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-all" size={16} />
                                                     <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={handleFileUpload}
-                                                        className="absolute inset-0 opacity-0 cursor-pointer z-30"
+                                                        required
+                                                        type="text"
+                                                        value={formData.name}
+                                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                        placeholder="e.g. Signature Espresso"
+                                                        className="w-full h-12 bg-zinc-900 border border-white/5 rounded-xl pl-13 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-sm font-bold placeholder:text-zinc-800"
                                                     />
-                                                    <Button
-                                                        type="button"
-                                                        className="w-full bg-white text-zinc-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-all"
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 block ml-4">Price (₹)</label>
+                                                    <div className="relative group">
+                                                        <IndianRupee className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-all" size={16} />
+                                                        <input
+                                                            required
+                                                            type="number"
+                                                            value={formData.price}
+                                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                            placeholder="299"
+                                                            className="w-full h-12 bg-zinc-900 border border-white/5 rounded-xl pl-13 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-sm font-bold"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 block ml-4">Stock</label>
+                                                    <div className="relative group">
+                                                        <Hash className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-all" size={16} />
+                                                        <input
+                                                            required
+                                                            type="number"
+                                                            value={formData.inventory}
+                                                            onChange={(e) => setFormData({ ...formData, inventory: e.target.value })}
+                                                            placeholder="100"
+                                                            className="w-full h-12 bg-zinc-900 border border-white/5 rounded-xl pl-13 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-sm font-bold"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 block ml-4">Classification</label>
+                                                <div className="relative group">
+                                                    <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-all pointer-events-none" size={16} />
+                                                    <select
+                                                        required
+                                                        value={formData.category}
+                                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                                        className="w-full h-12 bg-zinc-900 border border-white/5 rounded-xl pl-13 pr-4 appearance-none transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-sm font-bold"
                                                     >
-                                                        {formData.image ? 'Change Photo' : 'Upload Photo'}
-                                                    </Button>
+                                                        <option value="" disabled>Select a category</option>
+                                                        <option value="Coffee">Coffee</option>
+                                                        <option value="Cold Brew">Cold Brew</option>
+                                                        <option value="Pastry">Pastry</option>
+                                                        <option value="Snacks">Snacks</option>
+                                                        <option value="Tea">Tea</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-white transition-all pointer-events-none" size={16} />
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-zinc-900/50 py-3 rounded-2xl border border-white/5 flex items-center justify-center gap-2">
-                                            <AlertCircle size={12} className="text-zinc-600" />
-                                            <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest">Recommended: 800x800px</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Form Data Section */}
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 block ml-4">Item Name</label>
-                                            <div className="relative group">
-                                                <Tag className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-colors" size={16} />
-                                                <input
-                                                    required
-                                                    type="text"
-                                                    value={formData.name}
-                                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                    placeholder="e.g. Hazelnut Macchiato"
-                                                    className="w-full h-14 bg-zinc-900 border border-white/5 rounded-2xl pl-14 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-xs font-bold"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 block ml-4">Price (₹)</label>
-                                                <div className="relative group">
-                                                    <IndianRupee className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-colors" size={16} />
-                                                    <input
-                                                        required
-                                                        type="number"
-                                                        value={formData.price}
-                                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                        placeholder="299"
-                                                        className="w-full h-14 bg-zinc-900 border border-white/5 rounded-2xl pl-14 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-xs font-bold"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 block ml-4">Stock</label>
-                                                <div className="relative group">
-                                                    <Hash className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-colors" size={16} />
-                                                    <input
-                                                        required
-                                                        type="number"
-                                                        value={formData.inventory}
-                                                        onChange={(e) => setFormData({ ...formData, inventory: e.target.value })}
-                                                        className="w-full h-14 bg-zinc-900 border border-white/5 rounded-2xl pl-14 pr-4 transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-xs font-bold"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 block ml-4">Category</label>
-                                            <div className="relative group">
-                                                <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-700 group-focus-within:text-orange-500 transition-colors" size={16} />
-                                                <select
-                                                    required
-                                                    value={formData.category}
-                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                    className="w-full h-14 bg-zinc-900 border border-white/5 rounded-2xl pl-14 pr-4 appearance-none transition-all focus:ring-1 focus:ring-orange-500/50 outline-none text-xs font-bold"
-                                                >
-                                                    <option value="" disabled>Select category</option>
-                                                    <option value="Coffee">Coffee</option>
-                                                    <option value="Cold Brew">Cold Brew</option>
-                                                    <option value="Pastry">Pastry</option>
-                                                    <option value="Snacks">Snacks</option>
-                                                    <option value="Tea">Tea</option>
-                                                </select>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Modal Footer */}
-                                <div className="p-8 bg-zinc-900/50 border-t border-white/10 flex items-center justify-between gap-6 shrink-0">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500">
-                                            <AlertCircle size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 leading-tight">Verification</p>
-                                            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Stock & Price Checked</p>
-                                        </div>
-                                    </div>
+                                {/* Modal Footer (Condensed) */}
+                                <div className="p-6 bg-zinc-900/50 border-t border-white/10 flex items-center justify-between gap-6 overflow-hidden">
                                     <button
-                                        type="submit"
-                                        className="flex-1 h-14 bg-orange-500 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-orange-500/20 transition-all active:scale-95 px-8"
+                                        type="button"
+                                        onClick={() => setIsMenuModalOpen(false)}
+                                        className="px-6 py-3 text-zinc-500 hover:text-white font-black text-[9px] uppercase tracking-widest transition-all"
                                     >
-                                        {selectedProduct ? 'Update Collection' : 'Confirm & Add to Menu'}
+                                        Cancel
+                                    </button>
+                                    <button
+                                        disabled={loading || uploading}
+                                        type="submit"
+                                        className="flex-1 max-w-[250px] h-12 bg-white text-zinc-950 hover:bg-orange-500 hover:text-white font-black text-[9px] uppercase tracking-[0.2em] rounded-xl shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                    >
+                                        {loading ? (
+                                            <Loader2 className="animate-spin" size={16} />
+                                        ) : (
+                                            <>
+                                                {selectedProduct ? 'Update Creation' : 'Ready to Serve'}
+                                                <Plus size={16} className="group-hover:rotate-90 transition-transform duration-500" />
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </form>
                         </motion.div>
-                    </>
+                    </div>
                 )}
             </AnimatePresence>
         </div>
