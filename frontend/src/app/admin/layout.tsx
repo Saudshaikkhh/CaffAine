@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -24,6 +24,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const isLoginPage = pathname === '/admin/login';
 
+    useEffect(() => {
+        if (!loading && !isAdmin && !isLoginPage) {
+            router.push('/admin/login');
+        }
+    }, [isAdmin, loading, isLoginPage, router]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -37,11 +43,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return <>{children}</>;
     }
 
-    // Redirect if not admin
+    // Don't render content if not admin (redirect will happen in useEffect)
     if (!isAdmin) {
-        if (typeof window !== 'undefined') {
-            router.push('/admin/login');
-        }
         return null;
     }
 
